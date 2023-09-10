@@ -24,6 +24,12 @@ builder.Services.AddDbContext<TodoDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("TodoDbConnectionString"));
 });
 
+builder.Services.AddCors(options => options.AddPolicy(name: "NgOrigins",
+    policy =>
+    {
+        policy.WithOrigins("http://localhost:5000").AllowAnyMethod().AllowAnyHeader();
+    }));
+
 builder.Services.AddAuthenticationAndAuthorization(builder.Configuration);
 
 builder.Services.AddSwagger();
@@ -41,6 +47,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+
+
+app.UseCors("NgOrigins");
 app.UseAuthentication();
 
 app.UseAuthorization();
