@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 using TodoWebService.Auth;
 using TodoWebService.Models.DTOs.Auth;
 using TodoWebService.Models.Entities;
@@ -30,20 +31,22 @@ namespace TodoWebService.Controllers
 
             var accessToken = _jwtService.GenerateSecurityToken(user.Id, user.Email!, roles, claims);
 
-            var refreshToken = Guid.NewGuid().ToString("N").ToLower();
+            var refreshToken = GenerateRefreshToken();
 
-            user.RefreshToken = refreshToken;
+            user.RefreshToken = refreshToken.Token;
+            user.TokenExpires = refreshToken.Expires;
+            user.TokenCreated = refreshToken.Created;
             await _userManager.UpdateAsync(user);
 
             return new AuthTokenDto
             {
                 AccessToken = accessToken,
-                RefreshToken = refreshToken,
+                RefreshToken = refreshToken.Token,
             };
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<AuthTokenDto>> Register(RegisterRequest request)
+        public async Task<IActionResult> Register(RegisterRequest request)
         {
             var existingUser = await _userManager.FindByEmailAsync(request.Email);
             if (existingUser is not null)
@@ -60,7 +63,7 @@ namespace TodoWebService.Controllers
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
-            return await GenerateToken(user);
+            return Ok();
         }
 
         [HttpPost("login")]
@@ -86,9 +89,20 @@ namespace TodoWebService.Controllers
             var user = await _userManager.Users.FirstOrDefaultAsync(e => e.RefreshToken == request.RefreshToken);
 
             if (user is null)
-                return Unauthorized();
+                return Unauthorized("Invalid RefreshToken");
+            if (user.TokenExpires < DateTime.Now)
+                return Unauthorized("Token expired");
 
             return await GenerateToken(user);
+        }
+        private RefreshToken GenerateRefreshToken()
+        {
+            return new RefreshToken()
+            {
+                Token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64)),
+                Expires = DateTime.Now.AddDays(7),
+                Created = DateTime.Now
+            };
         }
 
     }

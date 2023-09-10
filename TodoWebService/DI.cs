@@ -105,14 +105,11 @@ namespace TodoWebService
 
         public static IServiceCollection AddLoggingPath(this IServiceCollection services, IConfiguration configuration)
         {
-            Assembly assembly = Assembly.GetExecutingAssembly();
-            AssemblyTitleAttribute titleAttribute = (AssemblyTitleAttribute)assembly.GetCustomAttributes(typeof(AssemblyTitleAttribute), false)[0];
-            string repositoryName = titleAttribute.Title;
+            var directoryInfo = new DirectoryInfo("logs");
+            var fullpath = directoryInfo.FullName;
             string logFileName = "log.txt";
-            string userFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            string repoPath = Path.Combine(userFolderPath, "Source", "Repos", repositoryName, "TodoWebService", "logs");
-
-            string logFilePath = Path.Combine(repoPath, logFileName);
+            string logFilePath = Path.Combine(fullpath, logFileName);
+            
             configuration["Serilog:WriteTo:1:Args:path"] = logFilePath;
 
             return services;
