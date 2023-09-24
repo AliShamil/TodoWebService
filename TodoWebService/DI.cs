@@ -10,6 +10,7 @@ using TodoWebService.Data;
 using TodoWebService.Models.Entities;
 using TodoWebService.Providers;
 using TodoWebService.Services;
+using TodoWebService.Services.BackgroundServices;
 
 namespace TodoWebService
 {
@@ -99,6 +100,8 @@ namespace TodoWebService
         public static IServiceCollection AddDomainServices(this IServiceCollection services)
         {
             services.AddScoped<ITodoService, TodoService>();
+            services.AddScoped<IMailService, MailService>();
+            services.AddHostedService<NotifyUserService>();
             return services;
         }
 

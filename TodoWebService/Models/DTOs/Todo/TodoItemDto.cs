@@ -6,5 +6,6 @@
         public string Text { get; set; } = string.Empty;
         public bool IsComleted { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset EndDate { get; set; }
     }
 }
